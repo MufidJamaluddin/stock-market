@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stock-dashboard-app
+  namespace: stock-dashboard
+  labels:
+    app: stock-dashboard-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: stock-dashboard-app
+  template:
+    metadata:
+      labels:
+        app: stock-dashboard-app
+    spec:
+      # In a real rollout, an initContainer or Job would wait for
+      # postgres/redis/elasticsearch/kafka readiness; Flyway's connect-retries
+      # (see application.yml) also absorbs a slow Postgres startup.
+      containers:
+        - name: stock-dashboard-app
+          image: stock-dashboard:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: stock-dashboard-config
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: stock-dashboard-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: stock-dashboard-secret
+                  key: DB_PASSWORD
+            - name: JAVA_OPTS
+              value: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75"
+          readinessProbe:
+            httpGet: { path: /actuator/health/readiness, port: 8080 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet: { path: /actuator/health/liveness, port: 8080 }
+            initialDelaySeconds: 45
+            periodSeconds: 15
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stock-dashboard-app
+  namespace: stock-dashboard
+spec:
+  selector:
+    app: stock-dashboard-app
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP

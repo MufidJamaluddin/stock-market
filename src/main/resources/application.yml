@@ -1,0 +1,95 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: stock-dashboard
+
+  # ---- R2DBC (reactive PostgreSQL access - used by the app at runtime) ----
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:stockdb}
+    username: ${DB_USER:stock}
+    password: ${DB_PASSWORD:stock}
+    pool:
+      enabled: true
+      initial-size: 5
+      max-size: 20
+
+  # ---- Plain JDBC datasource, used ONLY by Flyway to run migrations on startup.
+  #      The reactive app code never uses this DataSource directly. ----
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:stockdb}
+    username: ${DB_USER:stock}
+    password: ${DB_PASSWORD:stock}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 2
+      pool-name: flyway-migration-pool
+
+  flyway:
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    connect-retries: 10
+
+  # ---- Redis ----
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 3000ms
+    elasticsearch:
+      repositories:
+        enabled: true
+
+  elasticsearch:
+    uris: ${ES_URIS:http://localhost:9200}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: stock-dashboard-consumer
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+  codec:
+    max-in-memory-size: 5MB
+
+app:
+  kafka:
+    topic: stock-price-ticks
+    partitions: 3
+    replication-factor: 1
+  market:
+    generator:
+      enabled: ${MARKET_GENERATOR_ENABLED:true}
+      interval-ms: 2000
+  cache:
+    quote-ttl-seconds: 15
+    detail-ttl-seconds: 30
+    search-ttl-seconds: 60
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    id.my.mufidjam.stockdashboard: DEBUG
+    org.springframework.r2dbc: WARN

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Market Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>📈 Stock Market Dashboard</h1>
+  <div class="search-box">
+    <input id="searchInput" type="text" placeholder="Search symbol, company, or sector..." autocomplete="off">
+    <div id="searchResults" class="search-results hidden"></div>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>Top Gainers</h2>
+    <table class="mini-table" id="gainersTable"><tbody></tbody></table>
+  </section>
+
+  <section class="panel">
+    <h2>Top Losers</h2>
+    <table class="mini-table" id="losersTable"><tbody></tbody></table>
+  </section>
+
+  <section class="panel wide">
+    <div class="panel-header">
+      <h2>All Stocks (live)</h2>
+      <span id="liveStatus" class="status-dot offline" title="Live feed status"></span>
+    </div>
+    <table class="main-table">
+      <thead>
+        <tr>
+          <th>Symbol</th><th>Company</th><th>Sector</th><th>Exchange</th>
+          <th>Last</th><th>Open</th><th>High</th><th>Low</th><th>Volume</th><th>Chg %</th>
+        </tr>
+      </thead>
+      <tbody id="dashboardBody"></tbody>
+    </table>
+  </section>
+</main>
+
+<!-- Detail modal for "Search Detail" -->
+<div id="detailModal" class="modal hidden">
+  <div class="modal-content">
+    <button id="closeModal" class="close-btn">&times;</button>
+    <div id="detailBody">Loading...</div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
