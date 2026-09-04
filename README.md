@@ -131,3 +131,7 @@ kubectl -n stock-dashboard port-forward svc/stock-dashboard-app 8080:80
   topic instead.
 - Redis caching uses Jackson polymorphic typing so cached lists and DTOs
   deserialize back into their concrete classes.
+
+## About
+
+Author: Mufid J (Partially Helped by AI)
